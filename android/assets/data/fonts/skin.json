@@ -1,0 +1,17 @@
+{
+    "com.badlogic.gdx.graphics.g2d.BitmapFont": {
+        "titleblack": { "file": "fonts/titlefontblack.fnt" },
+        "titlewhite": { "file": "fonts/titlefontwhite.fnt" },
+        "drummon64black": { "file": "fonts/drummon64black.fnt" },
+        "drummon48black": { "file": "fonts/drummon48black.fnt" },
+        "drummon32black": { "file": "fonts/drummon32black.fnt" },
+    },
+    "com.badlogic.gdx.graphics.Color": {
+        "white": { "r": 1, "g": 1, "b": 1, "a": 1 },
+        "black": { "r": 0, "g": 0, "b": 0, "a": 1 },
+    },
+    "com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle": {
+        "titleblack": { "font": titleblack },
+        "titlewhite": { "font": titlewhite , "fontColor": white},
+    },
+}

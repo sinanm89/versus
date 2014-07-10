@@ -1,0 +1,155 @@
+
+menuSkin.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+blue_panel
+  rotate: false
+  xy: 1, 23
+  size: 100, 100
+  split: 39, 60, 42, 57
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+blue_button1
+  rotate: false
+  xy: 103, 74
+  size: 49, 49
+  split: 6, 6, 7, 10
+  orig: 49, 49
+  offset: 0, 0
+  index: -1
+blue_button2
+  rotate: false
+  xy: 103, 23
+  size: 49, 49
+  split: 7, 7, 5, 9
+  orig: 49, 49
+  offset: 0, 0
+  index: -1
+blue_button4
+  rotate: false
+  xy: 154, 74
+  size: 49, 49
+  split: 12, 19, 7, 10
+  orig: 49, 49
+  offset: 0, 0
+  index: -1
+blue_button6
+  rotate: false
+  xy: 154, 23
+  size: 49, 49
+  split: 9, 12, 6, 10
+  orig: 49, 49
+  offset: 0, 0
+  index: -1
+blue_button3
+  rotate: false
+  xy: 205, 78
+  size: 49, 45
+  split: 15, 15, 5, 7
+  orig: 49, 45
+  offset: 0, 0
+  index: -1
+blue_button5
+  rotate: false
+  xy: 205, 31
+  size: 49, 45
+  split: 7, 8, 7, 8
+  orig: 49, 45
+  offset: 0, 0
+  index: -1
+blue_button7
+  rotate: false
+  xy: 256, 78
+  size: 49, 45
+  split: 9, 11, 5, 5
+  orig: 49, 45
+  offset: 0, 0
+  index: -1
+blue_boxCheckmark
+  rotate: false
+  xy: 256, 40
+  size: 38, 36
+  orig: 38, 36
+  offset: 0, 0
+  index: -1
+blue_boxCross
+  rotate: false
+  xy: 307, 87
+  size: 38, 36
+  orig: 38, 36
+  offset: 0, 0
+  index: -1
+grey_box
+  rotate: false
+  xy: 347, 87
+  size: 38, 36
+  orig: 38, 36
+  offset: 0, 0
+  index: -1
+blue_circle
+  rotate: false
+  xy: 387, 87
+  size: 36, 36
+  split: 17, 18, 17, 18
+  orig: 36, 36
+  offset: 0, 0
+  index: -1
+blue_sliderLeft
+  rotate: false
+  xy: 425, 92
+  size: 39, 31
+  orig: 39, 31
+  offset: 0, 0
+  index: -1
+blue_sliderRight
+  rotate: false
+  xy: 466, 92
+  size: 39, 31
+  orig: 39, 31
+  offset: 0, 0
+  index: -1
+blue_sliderDown
+  rotate: false
+  xy: 296, 34
+  size: 28, 42
+  orig: 28, 42
+  offset: 0, 0
+  index: -1
+blue_sliderUp
+  rotate: false
+  xy: 326, 43
+  size: 28, 42
+  orig: 28, 42
+  offset: 0, 0
+  index: -1
+blue_checkmark
+  rotate: false
+  xy: 1, 1
+  size: 21, 20
+  orig: 21, 20
+  offset: 0, 0
+  index: -1
+blue_cross
+  rotate: false
+  xy: 356, 67
+  size: 18, 18
+  orig: 18, 18
+  offset: 0, 0
+  index: -1
+blue_selection
+  rotate: false
+  xy: 24, 4
+  size: 17, 17
+  split: 8, 8, 8, 8
+  orig: 17, 17
+  offset: 0, 0
+  index: -1
+blue_selection
+  rotate: false
+  xy: 24, 4
+  size: 17, 17
+  orig: 17, 17
+  offset: 0, 0
+  index: -1

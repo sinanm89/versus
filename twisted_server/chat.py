@@ -5,7 +5,7 @@ from twisted.internet import reactor
 import exceptions
 
 
-class Chat(LineReceiver):
+class VersusGame(LineReceiver):
 
     def __init__(self, users):
         self.name = None
@@ -80,14 +80,14 @@ class Chat(LineReceiver):
         return True
 
 
-class ChatFactory(Factory):
+class VersusGameFactory(Factory):
 
     def __init__(self):
         self.users = {} # maps user names to Chat instances
 
     def buildProtocol(self, addr):
-        return Chat(self.users)
+        return VersusGame(self.users)
 
 
-reactor.listenTCP(8123, ChatFactory())
+reactor.listenTCP(8123, VersusGameFactory())
 reactor.run()

@@ -15,7 +15,7 @@ class VersusGame(LineReceiver):
         self.state = "WAIT_PLAYERS"
 
     def __unicode__(self):
-        return "%s's Chat instance " % self.name
+        return "%s's Connection instance " % self.name
 
     def connectionMade(self):
         print 'Our current capacity is %s/%s' %(str(len(self.users)+1), self.max_players)

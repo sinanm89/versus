@@ -18,16 +18,16 @@ class VersusGame(LineReceiver):
         return "%s's Connection instance " % self.name
 
     def connectionMade(self):
-        print 'Our current capacity is %s/%s' %(str(len(self.users)+1), self.max_players)
-        self.handle_GETNAME()
+        print 'Our current capacity is %s/%s' % (str(len(self.users)+1), self.max_players)
+        self.get_connection_name()
         self.check_phase()
 
-    def connectionLost(self, reason):
-        if self.name in self.users:
-            del self.users[self.name]
+    def get_connection_name(self):
+        self.name = len(self.users)+1
+        self.users[str(self.name)] = self
+        self.sendLine("joined")
 
     def lineReceived(self, line):
-        # import ipdb;ipdb.set_trace()
         try:
             data = json.loads(line)
             print data
@@ -41,11 +41,9 @@ class VersusGame(LineReceiver):
             self.check_phase()
             #TODO: Parse json data to logic
             # self.broadcast_fphase_change(line)
-
-    def handle_GETNAME(self):
-        self.name = len(self.users)+1
-        self.users[str(self.name)] = self
-        self.sendLine("joined")
+        else:
+            #TODO: send error message?
+            pass
 
     def check_phase(self):
         if self.state == "WAIT_PLAYERS":
@@ -67,7 +65,6 @@ class VersusGame(LineReceiver):
         else:
             pass
 
-
     def broadcast_phase_change(self, phase):
         self.state = phase
         for users, protocol in self.users.iteritems():
@@ -79,6 +76,9 @@ class VersusGame(LineReceiver):
                 return False
         return True
 
+    def connectionLost(self, reason):
+        if self.name in self.users:
+            del self.users[self.name]
 
 class VersusGameFactory(Factory):
 

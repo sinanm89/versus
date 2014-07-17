@@ -1,16 +1,18 @@
 import json
+import random
 from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
 import exceptions
 
 
-class VersusGame(LineReceiver):
+class VersusGameConnection(LineReceiver):
 
     def __init__(self, users):
         self.name = None
         self.users = users
         self.is_ready = False
+        self.players_ready = []
         self.max_players = 2
         self.state = "WAIT_PLAYERS"
 
@@ -18,34 +20,52 @@ class VersusGame(LineReceiver):
         return "%s's Connection instance " % self.name
 
     def connectionMade(self):
-        print 'Our current capacity is %s/%s' % (str(len(self.users)+1), self.max_players)
-        self.get_connection_name()
+        self.name = self.ip_name()
+        self.users[str(self.name)] = self
+        print "====== Connection To %s ======" % self.name
+        print 'Our current capacity is %s/%s' % (str(len(self.users)), self.max_players)
         self.check_phase()
 
-    def get_connection_name(self):
-        self.name = len(self.users)+1
-        self.users[str(self.name)] = self
-        self.sendLine("joined")
+    def ip_name(self):
+        return str(self.transport.getPeer().host) + ":" + str(self.transport.getPeer().port)
 
     def lineReceived(self, line):
+        print '- line received: %s -' % line
         try:
             data = json.loads(line)
-            print data
         except exceptions.ValueError:
             data = None
             #TODO: logger here
-        if data:
-            print 'we have data, we need logic here'
-            if self.state == "READY_PLAYERS":
-                self.is_ready = data.get('is_ready', False)
-            self.check_phase()
-            #TODO: Parse json data to logic
-            # self.broadcast_fphase_change(line)
-        else:
-            #TODO: send error message?
+        if not data:
             pass
+        else:
+            if self.state == "READY_PLAYERS":
+                print '-'*30
+                self.is_ready = data.get("IS_READY", False)
+                self.players_ready = self.transport.server.factory.players_ready
+                self.transport.server.factory.players_ready[self.name] = self.is_ready
+                self.check_phase()
+
+            elif self.state == "START_GAME":
+                # Check to see if everyone got to ingame
+                # init game
+                print '- All Players Ready, begin game -'
+                self.broadcast_phase_change("INGAME")
+
+            elif self.state == "INGAME":
+                # Game loops
+                print '- INGAME -'
+                #if data is 'emote' then do emote
+                self.the_game.blame(data)
+
+            elif self.state == "ENDGAME":
+                pass
+            else:
+                #TODO: send error message?
+                pass
 
     def check_phase(self):
+        print "- USERS ARE : ", self.users
         if self.state == "WAIT_PLAYERS":
             self.current_player_count = len(self.users)
             if self.current_player_count == self.max_players:
@@ -56,9 +76,12 @@ class VersusGame(LineReceiver):
             else:
                 #TODO: AT THIS POINT THE READY BUTTON FLASHES IN GAME
                 pass
+            self.check_phase()
         elif self.state == "START_GAME":
-            pass
+            self.the_game = VersusGame(self.users)
+            self.broadcast_phase_change("INGAME")
         elif self.state == "INGAME":
+            print '- WE ARE IN GAME'
             pass
         elif self.state == "ENDGAME":
             pass
@@ -67,27 +90,76 @@ class VersusGame(LineReceiver):
 
     def broadcast_phase_change(self, phase):
         self.state = phase
+        print "- GAME PHASE CHANGED TO %s -" % phase
         for users, protocol in self.users.iteritems():
             protocol.sendLine('{ "PHASE_CHANGE" : "%s" }' % phase)
 
-    def users_are_ready(self):
+    def broadcast_my_action(self, action):
         for user, protocol in self.users.iteritems():
-            if not protocol.is_ready:
+            if protocol != self:
+                self.sendLine()
+
+    def users_are_ready(self):
+        for user, ready in self.players_ready.iteritems():
+            if not ready or ready == "False":
+                print '%s IS NOT READY' % user
                 return False
+        print "- PLAYERS READY ARE :", self.transport.server.factory.players_ready
         return True
 
     def connectionLost(self, reason):
-        if self.name in self.users:
-            del self.users[self.name]
+        # names should be strings always
+        self.broadcast_phase_change("WAIT_PLAYERS")
+        if str(self.name) in self.users:
+            self.transport.server.factory.update_users(self)
+
 
 class VersusGameFactory(Factory):
 
     def __init__(self):
         self.users = {} # maps user names to Chat instances
+        self.players_ready = {}
 
     def buildProtocol(self, addr):
-        return VersusGame(self.users)
+        return VersusGameConnection(self.users)
+
+    def update_users(self, user):
+        del self.users[user.name]
+
+class VersusGame(object):
+
+    round = 0
+    innocents = []
+    guilty_ones = []
+    accused_ones = {}
+
+    def __init__(self, players):
+        self.player_count = len(players)
+        if self.player_count < 5:
+            guilty_number = 1
+        else:
+            guilty_number = 2
+        guilty_ones = random.sample(players, guilty_number)
+        self.innocents = list(set(players)-set(guilty_ones))
+
+    def end_round(self):
+        pass
+
+    def blame(self, data):
+        data_type = data.get('accuse', None)
+        for accuser, accused in data_type.iteritems():
+            person_on_trial = self.accused_ones.get(accused)
+            if not person_on_trial:
+                self.accused_ones[accused] = [accuser]
+            else:
+                person_on_trial.append(accuser)
+
+        self.blame_roster = '11'
 
 
-reactor.listenTCP(8123, VersusGameFactory())
-reactor.run()
+def main():
+    reactor.listenTCP(8123, VersusGameFactory())
+    reactor.run()
+
+if __name__ == '__main__':
+    main()

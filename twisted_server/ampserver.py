@@ -1,3 +1,4 @@
+import json
 from twisted.protocols import amp
 
 
@@ -7,10 +8,20 @@ from twisted.protocols import amp
 #     response = [('result', amp.Float())]
 #     errors = {ZeroDivisionError: 'ZERO_DIVISION'}
 
+class Greetings(amp.Command):
+    # arguments = []
+    response = [('COMMANDS', amp.String())]
+
 class Ready(amp.Command):
     arguments = [('IS_READY', amp.Boolean())]
-    response = [('RECEIVED', amp.Boolean()),
-                 ('ceronimo', amp.String())]
+    response = [('RECEIVED', amp.String()),]
+
+    errors = {TypeError: '- TYPE ERR'}
+
+class Falafel(amp.Command):
+    arguments = [('a', amp.Boolean(optional=True))]
+    response = [('b', amp.Boolean()),
+                 ('c', amp.String(optional=True))]
 
     errors = {TypeError: '- TYPE ERR'}
 
@@ -18,17 +29,29 @@ class Math(amp.AMP):
 
     def connectionMade(self):
         print 'CONNECTION MADE'
+        # self.callRemote(Greetings)
 
+    @Greetings.responder
+    def hello(self):
+        return {'COMMANDS': "READY, falafel"}
+
+    @Ready.responder
     def ready(self, IS_READY):
         print '-'*30
         if IS_READY:
             print 'he is ready'
         elif not IS_READY:
             print 'HE AINT READY BRUH'
+        # self.germ = "no pls"
+        # self.falafel()
+        # self.remote(self.falafel())
+        return {'RECEIVED': True}
 
-        return {'RECEIVED': True, 'ceronimo': 'hello'}
-    Ready.responder(ready)
+    @Falafel.responder
+    def falafel(self, a=None):
+        print '- in falafel'
 
+        return {"b": self.germ }
 
 def main():
     from twisted.internet import reactor
@@ -36,7 +59,7 @@ def main():
 
     pf = Factory()
     pf.protocol = Math
-    reactor.listenTCP(1234, pf)
+    reactor.listenTCP(8123, pf)
     print 'started'
     reactor.run()
 

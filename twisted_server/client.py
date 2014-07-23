@@ -1,10 +1,10 @@
 import json
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint, connectProtocol
-from twisted.internet.protocol import connectionDone, ReconnectingClientFactory
+from twisted.internet.protocol import connectionDone, ReconnectingClientFactory, Protocol
 from twisted.protocols.basic import LineReceiver
 
-class Echo(LineReceiver):
+class Echo(Protocol):
 
 
     def connectionMade(self):

@@ -1,14 +1,28 @@
 import json
 import random
 from twisted.internet.protocol import Factory
+from twisted.protocols import amp
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
 import exceptions
 
+class Hello(amp.Command):
+    arguments = [('text', amp.String())]
+    response =  [('result', amp.String())]
 
-class VersusGameConnection(LineReceiver):
+class Ready(amp.Command):
+    arguments = [('IS_READY', amp.Boolean())]
+    response =  [('check', amp.String())]
+
+class PhaseChange(amp.Command):
+    arguments = [('phase', amp.String(optional=True))]
+    response = [('PHASE_CHANGE', amp.String())]
+
+
+class VersusGameConnection(amp.AMP):
 
     def __init__(self, users):
+        # super(VersusGameConnection, self).__init__()
         self.name = None
         self.users = users
         self.is_ready = False
@@ -26,8 +40,66 @@ class VersusGameConnection(LineReceiver):
         print 'Our current capacity is %s/%s' % (str(len(self.users)), self.max_players)
         self.check_phase()
 
+    def check_phase(self):
+        print "- USERS ARE : ", self.users
+        if self.state == "WAIT_PLAYERS":
+            self.current_player_count = len(self.users)
+            if self.current_player_count == self.max_players:
+                print '- calling remote'
+                import ipdb; ipdb.set_trace()
+                # self.users
+        elif self.state == "READY_PLAYERS":
+            if self.users_are_ready():
+                self.broadcast_phase_change("START_GAME")
+            else:
+                #TODO: AT THIS POINT THE READY BUTTON FLASHES IN GAME
+                pass
+            self.check_phase()
+        elif self.state == "START_GAME":
+            self.the_game = VersusGame(self.users)
+            self.broadcast_phase_change("INGAME")
+        elif self.state == "INGAME":
+            print '- WE ARE IN GAME'
+            pass
+        elif self.state == "ENDGAME":
+            pass
+        else:
+            pass
+
     def ip_name(self):
         return str(self.transport.getPeer().host) + ":" + str(self.transport.getPeer().port)
+
+    @Hello.responder
+    def hello(self, text):
+        print '-- in hello'
+        return {'result': text}
+
+    @Ready.responder
+    def ready(self, IS_READY):
+        print '-- IN READY'
+        if IS_READY:
+            #broadcast this user is ready
+            print "%s is ready" % self.name
+            self.is_ready = IS_READY
+            self.players_ready = self.transport.server.factory.players_ready
+            self.transport.server.factory.players_ready[self.name] = self.is_ready
+            #TODO:             SKETCHY
+            # self.check_phase()
+            return {'check':'doodle'}
+
+    @PhaseChange.responder
+    def phase_change(self, phase):
+        self.state = phase
+        print "- GAME PHASE CHANGED TO %s -" % phase
+        # for user, protocol in self.users.iteritems():
+            # user.callRemote(PhaseChange, phase="READY_PLAYERS")
+
+        return {'PHASE_CHANGE': phase}
+            # self.send_to_my_user()
+    # PhaseChange.responder(phase_change)
+
+    def send_to_my_user(self, data):
+        return data
 
     def lineReceived(self, line):
         print '- line received: %s -' % line
@@ -64,35 +136,15 @@ class VersusGameConnection(LineReceiver):
                 #TODO: send error message?
                 pass
 
-    def check_phase(self):
-        print "- USERS ARE : ", self.users
-        if self.state == "WAIT_PLAYERS":
-            self.current_player_count = len(self.users)
-            if self.current_player_count == self.max_players:
-                self.broadcast_phase_change("READY_PLAYERS")
-        elif self.state == "READY_PLAYERS":
-            if self.users_are_ready():
-                self.broadcast_phase_change("START_GAME")
-            else:
-                #TODO: AT THIS POINT THE READY BUTTON FLASHES IN GAME
-                pass
-            self.check_phase()
-        elif self.state == "START_GAME":
-            self.the_game = VersusGame(self.users)
-            self.broadcast_phase_change("INGAME")
-        elif self.state == "INGAME":
-            print '- WE ARE IN GAME'
-            pass
-        elif self.state == "ENDGAME":
-            pass
-        else:
-            pass
 
     def broadcast_phase_change(self, phase):
         self.state = phase
         print "- GAME PHASE CHANGED TO %s -" % phase
         for users, protocol in self.users.iteritems():
-            protocol.sendLine('{ "PHASE_CHANGE" : "%s" }' % phase)
+            # import ipdb; ipdb.set_trace()
+            # PhaseChange.responder(users.phase_change(phase))
+            pass
+            # protocol.sendLine('{ "PHASE_CHANGE" : "%s" }' % phase)
 
     def broadcast_my_action(self, action):
         for user, protocol in self.users.iteritems():
@@ -109,6 +161,7 @@ class VersusGameConnection(LineReceiver):
 
     def connectionLost(self, reason):
         # names should be strings always
+        print "- Connection lost "
         self.broadcast_phase_change("WAIT_PLAYERS")
         if str(self.name) in self.users:
             self.transport.server.factory.update_users(self)

@@ -1,10 +1,10 @@
 import json
 from twisted.internet import reactor
-from twisted.internet.endpoints import TCP4ClientEndpoint, connectProtocol
 from twisted.internet.protocol import connectionDone, ReconnectingClientFactory, Protocol
 from twisted.protocols.basic import LineReceiver
 
-class Echo(Protocol):
+
+class Echo(LineReceiver):
 
 
     def connectionMade(self):
@@ -20,22 +20,24 @@ class Echo(Protocol):
         print 'IVE DESTROYED THE CONNECTION'
 
     def dataReceived(self, data):
-        print '- RECEIVED DATA : %s - ' % data
+        print '=====RECEIVED DATA :'
         for data_received in data.splitlines():
             try:
                 received = json.loads(data_received)
             except Exception, e:
-                print "EXCEPTION"
+                print "=====EXCEPTION"
                 import ipdb;ipdb.set_trace()
+            print '=====DATA: %s' % received
             for key,value in received.iteritems():
                 if key == "PHASE_CHANGE":
                     if value == "READY_PLAYERS":
-                        # send = json.dumps({"IS_READY":"False"})
                         send = json.dumps({"IS_READY":True})
-                        print send
-                        # self.sendLine(send)
-
+                        print "=====DATA TO BE SENT IS : %s" % send
                         reactor.callLater(2, self.sendLine, send)
+                    if value == "START_GAME":
+                        send = json.dumps({"blame" : data.get('users')[0]})
+                        print "=====PLAYERS ARE READY"
+                        # reactor.callLater(2, self.sendLine, send)
 
 
 class EchoClientFactory(ReconnectingClientFactory):

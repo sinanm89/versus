@@ -1,7 +1,7 @@
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import ClientCreator
 from twisted.protocols import amp
-from ampserver import Ready
+from DEP_ampserver import Ready
 
 
 def doMath():

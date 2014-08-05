@@ -1,8 +1,8 @@
 import json
+import exceptions
+from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
-from twisted.internet import reactor
-import exceptions
 
 
 class VersusGame(LineReceiver):
@@ -23,24 +23,28 @@ class VersusGame(LineReceiver):
         self.check_phase()
 
     def get_connection_name(self):
-        self.name = len(self.users)+1
+        user_ip_port = self.transport.getHost()
+        self.name = str(user_ip_port.host) + ":" + str(user_ip_port.port)
         self.users[str(self.name)] = self
-        self.sendLine("joined")
+        print "joined user ====="
 
     def lineReceived(self, line):
         try:
             data = json.loads(line)
-            print data
+            print "===== DATA RECEIVED IS : %s " % data
         except exceptions.ValueError:
             data = None
             #TODO: logger here
         if data:
             print 'we have data, we need logic here'
             if self.state == "READY_PLAYERS":
-                self.is_ready = data.get('is_ready', False)
+                self.is_ready = data.get('IS_READY', False)
             self.check_phase()
+            if self.state == "START_GAME":
+                print 'game started'
+                pass
+
             #TODO: Parse json data to logic
-            # self.broadcast_fphase_change(line)
         else:
             #TODO: send error message?
             pass
@@ -54,6 +58,7 @@ class VersusGame(LineReceiver):
             if self.users_are_ready():
                 self.broadcast_phase_change("START_GAME")
             else:
+                print '===== USERS ARENT READY'
                 #TODO: AT THIS POINT THE READY BUTTON FLASHES IN GAME
                 pass
         elif self.state == "START_GAME":
@@ -68,7 +73,11 @@ class VersusGame(LineReceiver):
     def broadcast_phase_change(self, phase):
         self.state = phase
         for users, protocol in self.users.iteritems():
-            protocol.sendLine('{ "PHASE_CHANGE" : "%s" }' % phase)
+            send = { "PHASE_CHANGE" : phase }
+            if self.state == "START_GAME":
+                import ipdb; ipdb.set_trace()
+                send['users'] = [key for key,value in self.transport.server.factory.users.iteritems()]
+            protocol.sendLine(json.dumps(send))
 
     def users_are_ready(self):
         for user, protocol in self.users.iteritems():
